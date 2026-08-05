@@ -237,8 +237,8 @@ fun ChatScreen(
         content = {
             if (showOnboarding) {
                 OnboardingScreen(
-                    onStartSession = { name, gender, subject, topic, understanding ->
-                        viewModel.createNewSession(name, gender, subject, topic, understanding)
+                    onStartSession = { name, subject, topic, understanding ->
+                        viewModel.createNewSession(name, subject, topic, understanding)
                     },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -277,11 +277,10 @@ fun ChatScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OnboardingScreen(
-    onStartSession: (String, String, String, String, String) -> Unit,
+    onStartSession: (String, String, String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var studentName by remember { mutableStateOf("") }
-    var selectedGender by remember { mutableStateOf("BOY") } // BOY, GIRL, OTHER
     var selectedSubject by remember { mutableStateOf("Computer Science") }
     var topicTitle by remember { mutableStateOf("") }
     var understandingText by remember { mutableStateOf("") }
@@ -411,34 +410,6 @@ fun OnboardingScreen(
                                     .testTag("onboarding_name_input")
                             )
 
-                            // Gender Chips for customized interactive persona
-                            Text("Your Gender:", color = Color.White, fontSize = 13.sp)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                val genders = listOf("BOY" to "👦 Boy", "GIRL" to "👧 Girl", "OTHER" to "🧑 Other")
-                                genders.forEach { (key, label) ->
-                                    val isSelected = selectedGender == key
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(44.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(if (isSelected) SaffronOrange else Color.DarkGray)
-                                            .clickable { selectedGender = key }
-                                            .wrapContentSize(Alignment.Center)
-                                    ) {
-                                        Text(
-                                            text = label,
-                                            color = Color.White,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            fontSize = 13.sp
-                                        )
-                                    }
-                                }
-                            }
-
                             // Section: Subject consultation
                             Divider(color = Color.Gray.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 4.dp))
                             Text("2. WHAT ARE WE STUDYING TODAY?", color = SunnyYellow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
@@ -518,7 +489,6 @@ fun OnboardingScreen(
                             if (isFormValid) {
                                 onStartSession(
                                     studentName.trim(),
-                                    selectedGender,
                                     selectedSubject,
                                     topicTitle.trim(),
                                     understandingText.trim()
@@ -678,6 +648,7 @@ fun MainChatWorkspace(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val commands = listOf(
+                        "flowchart" to "📊 Flowchart View",
                         "quiz me" to "📝 Quiz me",
                         "hint" to "💡 Hint",
                         "explain again" to "🔄 Explain alternative",
@@ -1247,7 +1218,7 @@ fun BrewingChaiThinkingItem() {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Venky is brewing Irani Chai & your answer... ☕️",
+                    text = "Venky is analyzing & preparing your answer... 💡",
                     color = SunnyYellow,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold

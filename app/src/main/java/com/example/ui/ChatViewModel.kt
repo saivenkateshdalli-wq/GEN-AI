@@ -203,7 +203,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun createNewSession(
         name: String,
-        gender: String,
         subject: String,
         topic: String,
         understanding: String
@@ -211,7 +210,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val newSession = ChatSession(
                 studentName = name,
-                gender = gender,
+                gender = "OTHER",
                 subject = subject,
                 topic = topic,
                 initialUnderstanding = understanding,
