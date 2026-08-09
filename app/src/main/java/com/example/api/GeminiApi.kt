@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import retrofit2.HttpException
 
 @JsonClass(generateAdapter = true)
 data class PerplexityRequest(
@@ -255,17 +257,49 @@ object GeminiClient {
                 systemInstruction = GeminiContent(parts = listOf(GeminiPart(text = systemInstructionText)))
             )
 
-            val modelName = "gemini-2.5-flash"
-            val geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey"
+            val modelsToTry = listOf("gemini-3.5-flash", "gemini-flash-latest")
+            var lastError: Exception? = null
 
-            try {
-                val response = service.generateGeminiContent(geminiUrl, geminiRequest)
-                response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                    ?: "Ah, I couldn't get a response from Gemini. Can you please ask again? 😊"
-            } catch (e: Exception) {
-                Log.e("GeminiError", "Error calling Gemini API", e)
-                val errorMsg = e.message ?: "Unknown error"
-                "Looks like we had a minor technical issue: ${errorMsg}. Let's try once more!"
+            for (model in modelsToTry) {
+                var attempt = 0
+                val maxAttempts = 3
+                while (attempt < maxAttempts) {
+                    val geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
+                    try {
+                        val response = service.generateGeminiContent(geminiUrl, geminiRequest)
+                        val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                        if (!text.isNullOrBlank()) {
+                            return@withContext text
+                        }
+                    } catch (e: HttpException) {
+                        lastError = e
+                        Log.w("GeminiApi", "Attempt ${attempt + 1} failed for model $model with HTTP ${e.code()}")
+                        if (e.code() == 429 || e.code() == 503 || e.code() == 500) {
+                            attempt++
+                            if (attempt < maxAttempts) {
+                                delay(1200L * attempt)
+                            }
+                        } else {
+                            // Non-transient HTTP status (e.g. 400 Bad Request or 403 Forbidden), break retry loop for this model
+                            break
+                        }
+                    } catch (e: Exception) {
+                        lastError = e
+                        Log.w("GeminiApi", "Attempt ${attempt + 1} failed for model $model: ${e.message}")
+                        attempt++
+                        if (attempt < maxAttempts) {
+                            delay(1000L * attempt)
+                        }
+                    }
+                }
+            }
+
+            Log.e("GeminiError", "All models and retries failed", lastError)
+            if (lastError is HttpException && lastError.code() == 429) {
+                "I'm currently receiving a high volume of tutor requests! 🎓 Please wait 3 seconds and tap 'Ask Again' or send your message once more."
+            } else {
+                val errorMsg = lastError?.message ?: "Unknown error"
+                "Looks like we had a minor technical issue: $errorMsg. Let's try once more! 😊"
             }
         }
     }

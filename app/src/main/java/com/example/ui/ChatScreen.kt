@@ -47,21 +47,81 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.R
 import com.example.data.ChatMessage
 import com.example.data.ChatSession
 import com.example.ui.components.MarkdownText
+import com.example.ui.theme.AcademicBlue
+import com.example.ui.theme.AcademicBlueLight
+import com.example.ui.theme.AcademicPurple
+import com.example.ui.theme.CampusEmerald
+import com.example.ui.theme.OxfordNavy
+import com.example.ui.theme.ParchmentAmber
+import com.example.ui.theme.ParchmentLight
+import com.example.ui.theme.ScholarGold
+import com.example.ui.theme.ScholarYellow
+import com.example.ui.theme.SoftSlateBorder
+import com.example.ui.theme.TutorCardBg
+import com.example.ui.theme.TutorSlate
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 
-// Custom Color Palette for VENKY (Indian Royal Theme: Orange/Amber & Royal Indigo)
-val DeepIndigo = Color(0xFF0F172A)
-val SoftIndigoBg = Color(0xFF1E293B)
-val SaffronOrange = Color(0xFFF97316)
-val SunnyYellow = Color(0xFFFBBF24)
-val WarmBeige = Color(0xFFFFFBEB)
-val LightSlate = Color(0xFFF1F5F9)
+// Custom University Tutor Color Tokens for VENKY AI App
+val DeepIndigo = OxfordNavy
+val SoftIndigoBg = TutorSlate
+val SaffronOrange = AcademicBlue
+val SunnyYellow = ScholarGold
+val WarmBeige = ParchmentLight
+val LightSlate = SoftSlateBorder
+
+// Lottie Animation Composables for Message Bubbles
+@Composable
+fun LottieTutorSparkleBadge(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_tutor_sparkle))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun LottieAiThinkingAnimation(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_ai_thinking))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun LottieAudioWaveAnimation(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.lottie_audio_wave))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever
+    )
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+        modifier = modifier
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1005,182 +1065,224 @@ fun ChatMessageItem(
 ) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
-    when (message.sender) {
-        "SYSTEM" -> {
-            // Elegant centered status notice for modes
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(animationSpec = tween(280)) + slideInVertically(
+            initialOffsetY = { 24 },
+            animationSpec = tween(280)
+        )
+    ) {
+        when (message.sender) {
+            "SYSTEM" -> {
+                // Elegant centered status notice for modes
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(SunnyYellow.copy(alpha = 0.15f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = message.content,
-                        color = SunnyYellow,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-        "USER" -> {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.82f)
-                        .wrapContentWidth(Alignment.End)
-                        .clip(RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp))
-                        .background(SaffronOrange)
-                        .padding(12.dp)
-                ) {
-                    androidx.compose.foundation.text.selection.SelectionContainer {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(ScholarGold.copy(alpha = 0.15f))
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
                         Text(
                             text = message.content,
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-        }
-        else -> { // VENKY
-            val extractedLinks = remember(message.content) { extractLinks(message.content) }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.Top
-            ) {
-                // Circle Mascot portrait
-                Image(
-                    painter = painterResource(id = R.drawable.ic_venky_mascot),
-                    contentDescription = "VENKY Profile",
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(SaffronOrange.copy(alpha = 0.15f))
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(0.92f)
-                        .clip(RoundedCornerShape(0.dp, 16.dp, 16.dp, 16.dp))
-                        .background(SoftIndigoBg)
-                        .padding(12.dp)
-                ) {
-                    androidx.compose.foundation.text.selection.SelectionContainer {
-                        MarkdownText(
-                            text = message.content,
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    // Render extracted links (e.g., YouTube related topics) beautifully as individual buttons
-                    if (extractedLinks.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Divider(color = Color.LightGray.copy(alpha = 0.15f))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "💡 Visual Learning Resources:",
-                            color = SunnyYellow,
+                            color = ScholarGold,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        
-                        // Render each link as a high-fidelity interactive button
-                        extractedLinks.forEach { link ->
+                    }
+                }
+            }
+            "USER" -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .wrapContentWidth(Alignment.End)
+                            .clip(RoundedCornerShape(18.dp, 18.dp, 2.dp, 18.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(AcademicBlue, AcademicBlueLight)
+                                )
+                            )
+                            .padding(14.dp)
+                    ) {
+                        androidx.compose.foundation.text.selection.SelectionContainer {
+                            Text(
+                                text = message.content,
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp
+                            )
+                        }
+                    }
+                }
+            }
+            else -> { // VENKY - TUTOR
+                val extractedLinks = remember(message.content) { extractLinks(message.content) }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Circle Mascot portrait with subtle glowing ring
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(AcademicBlue.copy(alpha = 0.2f))
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_venky_mascot),
+                            contentDescription = "VENKY Profile",
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(0.94f)
+                            .clip(RoundedCornerShape(2.dp, 18.dp, 18.dp, 18.dp))
+                            .background(TutorSlate)
+                            .padding(14.dp)
+                    ) {
+                        // Header with Lottie Sparkle Badge
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        ) {
+                            Text(
+                                text = "VENKY AI • ACADEMIC TUTOR",
+                                color = ScholarGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            LottieTutorSparkleBadge(modifier = Modifier.size(18.dp))
+                        }
+
+                        androidx.compose.foundation.text.selection.SelectionContainer {
+                            MarkdownText(
+                                text = message.content,
+                                color = ParchmentLight,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        // Render extracted links
+                        if (extractedLinks.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            HorizontalDivider(color = SoftSlateBorder.copy(alpha = 0.3f))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "💡 Visual Learning Resources:",
+                                color = ScholarGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            
+                            extractedLinks.forEach { link ->
+                                Row(
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp)
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(AcademicBlue.copy(alpha = 0.15f))
+                                        .clickable {
+                                            try {
+                                                uriHandler.openUri(link.url)
+                                            } catch (e: Exception) {
+                                                // Fallback
+                                            }
+                                        }
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "📺 ",
+                                        fontSize = 12.sp
+                                    )
+                                    Text(
+                                        text = link.label,
+                                        color = Color.White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        text = "➔",
+                                        color = AcademicBlueLight,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = SoftSlateBorder.copy(alpha = 0.2f))
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Row(
                                 modifier = Modifier
-                                    .padding(vertical = 4.dp)
-                                    .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.Red.copy(alpha = 0.15f))
-                                    .clickable {
-                                        try {
-                                            uriHandler.openUri(link.url)
-                                        } catch (e: Exception) {
-                                            // Fallback
-                                        }
-                                    }
-                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    .background(ScholarGold.copy(alpha = 0.15f))
+                                    .clickable { onSpeak(message.content) }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
+                                LottieAudioWaveAnimation(modifier = Modifier.size(18.dp, 12.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "📺 ",
-                                    fontSize = 12.sp
-                                )
-                                Text(
-                                    text = link.label,
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Text(
-                                    text = "➔",
-                                    color = SaffronOrange,
-                                    fontSize = 12.sp,
+                                    text = "Speak Out",
+                                    color = ScholarGold,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Divider(color = Color.LightGray.copy(alpha = 0.1f))
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(SunnyYellow.copy(alpha = 0.15f))
-                                .clickable { onSpeak(message.content) }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "🗣️ Speak Out",
-                                color = SunnyYellow,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Color.White.copy(alpha = 0.1f))
-                                .clickable { onStopSpeak() }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "⏹️ Stop",
-                                color = Color.LightGray,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.1f))
+                                    .clickable { onStopSpeak() }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "⏹️ Stop",
+                                    color = Color.LightGray,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -1199,36 +1301,39 @@ fun BrewingChaiThinkingItem() {
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_venky_mascot),
-            contentDescription = "VENKY Profile Mini",
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(36.dp)
+                .size(38.dp)
                 .clip(CircleShape)
-                .background(SaffronOrange.copy(alpha = 0.15f))
-        )
+                .background(AcademicBlue.copy(alpha = 0.2f))
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_venky_mascot),
+                contentDescription = "VENKY Profile Mini",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+            )
+        }
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(0.dp, 16.dp, 16.dp, 16.dp))
-                .background(SoftIndigoBg)
+                .clip(RoundedCornerShape(2.dp, 16.dp, 16.dp, 16.dp))
+                .background(TutorSlate)
                 .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Venky is analyzing & preparing your answer... 💡",
-                    color = SunnyYellow,
+                    text = "Venky is analyzing & structuring your explanation... 🎓",
+                    color = ScholarGold,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                CircularProgressIndicator(
-                    color = SaffronOrange,
-                    strokeWidth = 2.dp,
-                    modifier = Modifier.size(12.dp)
-                )
+                LottieAiThinkingAnimation(modifier = Modifier.size(48.dp, 20.dp))
             }
         }
     }
